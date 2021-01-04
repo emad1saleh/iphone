@@ -9,7 +9,7 @@
 <key>kind</key>
 <string>software-package</string>
 <key>url</key>
-<string>http://www.cokernutx.com/ipa2/onlyfans.ipa</string>
+<string>http://www.cokernutx.com/ipaad/sileo.ipa</string>
 </dict>
 <dict>
 <key>kind</key>
@@ -27,7 +27,7 @@
 <key>metadata</key>
 <dict>
 <key>bundle-identifier</key>
-<string>org.emad1saleh.Emadstore</string>
+<string>org.emad1saleh.Emadstoresileo</string>
 <key>bundle-version</key>
 <string>3.0</string>
 <key>kind</key>
