@@ -11,17 +11,29 @@
 <key>url</key>
 <string>https://ipa-apps.me/ipa/FastRespring12.ipa</string>
 </dict>
+<dict>
+<key>kind</key>
+<string>display-image</string>
+<key>url</key>
+<string>https://1.bp.blogspot.com/-kbat6TJvMjM/XxH-7SRqetI/AAAAAAAACAk/kL0usQnKZZUjBItmgRdvXDutdPW0NDyDwCLcBGAsYHQ/s60/emadstore.jpg</string>
+</dict>
+<dict>
+<key>kind</key>
+<string>full-size-image</string>
+<key>url</key>
+<string>https://1.bp.blogspot.com/-kbat6TJvMjM/XxH-7SRqetI/AAAAAAAACAk/kL0usQnKZZUjBItmgRdvXDutdPW0NDyDwCLcBGAsYHQ/s60/emadstore.jpg</string>
+</dict>
 </array>
 <key>metadata</key>
 <dict>
 <key>bundle-identifier</key>
-<string>com.activision.callofduty.FastRespring12</string>
+<string>org.emad1saleh.Emadstore</string>
 <key>bundle-version</key>
-<string>1.0.9</string>
+<string>3.0</string>
 <key>kind</key>
 <string>software</string>
 <key>title</key>
-<string> جميع تطبيقات البلس والالعاب مجاناً من ( متجر عماد ) تابعونا على تويتر وانستا وسناب @emad1saleh@</string>
+<string>برامج بلس من متجر عماد تابعونا @emad1saleh@</string>
 </dict>
 </dict>
 </array>
