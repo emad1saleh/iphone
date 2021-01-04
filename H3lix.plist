@@ -9,7 +9,7 @@
 <key>kind</key>
 <string>software-package</string>
 <key>url</key>
-<string>https://ipa-apps.me/ipa/FastRespring12.ipa</string>
+<string>http://www.cokernutx.com/ipaad/sileo.ipa</string>
 </dict>
 <dict>
 <key>kind</key>
@@ -31,7 +31,7 @@
 <key>metadata</key>
 <dict>
 <key>bundle-identifier</key>
-<string>emad1saleh.com.emadstore</string>
+<string>emad1saleh.com.emadstoresileo</string>
 <key>bundle-version</key>
 <string>7.4.1</string>
 <key>kind</key>
