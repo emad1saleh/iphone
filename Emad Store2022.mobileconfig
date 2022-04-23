@@ -17,7 +17,7 @@
 			<key>IsRemovable</key>
 			<false/>
 			<key>Label</key>
-			<string>متجر عماد</string>
+			<string>أدوات متجر عماد</string>
 			<key>PayloadDescription</key>
 			<string>Configures settings for a web clip</string>
 			<key>PayloadDisplayName</key>
