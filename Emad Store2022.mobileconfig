@@ -5,7 +5,7 @@
 	<key>ConsentText</key>
 	<dict>
 		<key>default</key>
-		<string>متجر عماد</string>
+		<string>أدوات متجر عماد</string>
 	</dict>
 	<key>PayloadContent</key>
 	<array>
@@ -40,11 +40,11 @@
 	<string>مرحباً بكم في متجر عماد للايفون
 تابعونا على تويتر وسناب وانستقرام @emad1saleh@</string>
 	<key>PayloadDisplayName</key>
-	<string>متجر عماد</string>
+	<string>أدوات متجر عماد</string>
 	<key>PayloadIdentifier</key>
 	<string>Emads-Mac.B712EF46-FCC9-4A3E-B640-817D4345FF90</string>
 	<key>PayloadOrganization</key>
-	<string>متجر عماد</string>
+	<string>أدوات متجر عماد</string>
 	<key>PayloadRemovalDisallowed</key>
 	<false/>
 	<key>PayloadType</key>
