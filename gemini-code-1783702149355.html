@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة الإرسال الذكية المتقدمة</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root { --primary: #25D366; --dark: #075E54; --danger: #dc3545; --warning: #ffc107; --light: #f8f9fa; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #e5ddd5; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        h2 { color: var(--dark); text-align: center; border-bottom: 3px solid var(--primary); padding-bottom: 10px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .box { background: var(--light); padding: 15px; border-radius: 8px; border: 1px solid #ddd; }
+        h3 { margin-top: 0; color: var(--dark); font-size: 1.1rem; }
+        label { font-weight: bold; font-size: 0.9rem; display: block; margin-bottom: 5px; }
+        input[type="number"], input[type="file"], textarea { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-family: inherit; }
+        .msg-box { background: #fff; padding: 10px; border: 1px dashed #aaa; margin-bottom: 10px; border-radius: 6px; }
+        .btn { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; transition: 0.3s; }
+        .btn-add { background: #17a2b8; width: 100%; }
+        .btn-start { background: var(--primary); font-size: 1.1rem; padding: 15px; width: 100%; }
+        .btn-start:disabled { background: #ccc; cursor: not-allowed; }
+        .btn-pause { background: var(--warning); color: #000; }
+        .btn-resume { background: #28a745; }
+        .btn-stop { background: var(--danger); }
+        .controls { display: flex; gap: 10px; margin-top: 15px; justify-content: center; }
+        .controls button { flex: 1; padding: 12px; font-size: 1rem; }
+        .dashboard { background: var(--dark); color: white; padding: 20px; border-radius: 8px; text-align: center; margin-top: 20px; font-size: 1.2rem; }
+        #status-text { font-weight: bold; color: #ffc107; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🚀 منصة الإرسال الذكية (نسخة الفحص الذكي)</h2>
+
+    <div class="grid-2">
+        <div class="box">
+            <h3>⚙️ الإعدادات الأساسية</h3>
+            <label>1. ملف الأرقام (Excel / CSV):</label>
+            <input type="file" id="excelFile" accept=".xlsx, .xls, .csv">
+            <small style="color: #666; display: block; margin-bottom: 15px;">العمود الأول A للاسماء، العمود الثاني B للأرقام.</small>
+            
+            <label>2. Tالتباعد الزمني (بالثواني):</label>
+            <input type="number" id="delayInput" value="15" min="5">
+        </div>
+
+        <div class="box">
+            <h3>🧠 قاموس الكلمات البديلة (Spintax)</h3>
+            <label>أضف كلماتك (كلمة:مرادف1,مرادف2):</label>
+            <textarea id="customDict" rows="4" placeholder="مثال:&#10;مرحبا:أهلاً,حياك الله,يا هلا"></textarea>
+        </div>
+    </div>
+
+    <div class="box">
+        <h3>📝 صياغات الرسائل (حتى 50 رسالة)</h3>
+        <div id="messages-container"></div>
+        <button class="btn btn-add" onclick="addMessageInput()">+ إضافة مربع رسالة جديد</button>
+    </div>
+
+    <div class="dashboard">
+        <div>الأرقام المرفوعة: <span id="total-count">0</span> | تم الإرسال: <span id="sent-count" style="color: var(--primary);">0</span></div>
+        <div style="margin-top: 10px; font-size: 1rem;">الحالة: <span id="status-text">بانتظار تحميل الملف...</span></div>
+        
+        <div class="controls">
+            <button class="btn btn-start" id="btn-start" onclick="startSending()" disabled>▶️ بدء النشر</button>
+            <button class="btn btn-pause" id="btn-pause" onclick="pauseSending()" style="display:none;">⏸️ إيقاف مؤقت</button>
+            <button class="btn btn-resume" id="btn-resume" onclick="resumeSending()" style="display:none;">▶️ استئناف</button>
+            <button class="btn btn-stop" id="btn-stop" onclick="stopSending()" style="display:none;">⏹️ إيقاف نهائي</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let contacts = [];
+    let currentIndex = 0;
+    let isRunning = false;
+    let isPaused = false;
+    let timerId = null;
+    let msgCount = 0;
+
+    const baseDictionary = {
+        "مرحبا": ["أهلاً", "حياك الله", "السلام عليكم", "يا هلا", "أرحب"],
+        "عرض": ["خصم", "تخفيض", "فرصة", "تنزيلات", "باقة"],
+        "ممتاز": ["رائع", "مذهل", "رهيب", "خيالي", "استثنائي"]
+    };
+
+    function addMessageInput() {
+        if(msgCount >= 50) return alert("وصلت للحد الأقصى!");
+        msgCount++;
+        const container = document.getElementById('messages-container');
+        const div = document.createElement('div');
+        div.className = 'msg-box';
+        div.innerHTML = `<label>رسالة رقم ${msgCount}:</label><textarea class="msg-content" rows="2" placeholder="اكتب صياغة الرسالة هنا..."></textarea>`;
+        container.appendChild(div);
+    }
+    
+    addMessageInput(); addMessageInput(); addMessageInput();
+
+    document.getElementById('excelFile').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        document.getElementById('status-text').innerText = "جاري قراءة الملف وتحليله...";
+
+        // فحص أولى: هل المكتبة محملة من الإنترنت؟
+        if (typeof XLSX === 'undefined') {
+            document.getElementById('status-text').style.color = '#dc3545';
+            document.getElementById('status-text').innerText = "❌ خطأ: لم يتم تحميل مكتبة الإكسل! تأكد من اتصال جهازك بالإنترنت ثم قم بتحديث الصفحة.";
+            alert("خطأ: الأداة بحاجة للاتصال بالإنترنت لقراءة ملفات الإكسل.");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                
+                contacts = [];
+                json.forEach((row, index) => {
+                    if (row[0] && row[1]) {
+                        let name = row[0].toString().trim();
+                        let phone = row[1].toString().replace(/\D/g, '');
+                        
+                        if (phone.length === 9 && phone.startsWith('7')) {
+                            phone = '967' + phone;
+                        }
+                        if (phone.length >= 9) {
+                            contacts.push({ name, phone });
+                        }
+                    }
+                });
+
+                document.getElementById('total-count').innerText = contacts.length;
+                
+                if(contacts.length > 0) {
+                    document.getElementById('status-text').style.color = '#25D366';
+                    document.getElementById('status-text').innerText = `📊 تم تحميل ${contacts.length} رقم بنجاح وجاهز للبث!`;
+                    document.getElementById('btn-start').disabled = false;
+                } else {
+                    document.getElementById('status-text').style.color = '#ffc107';
+                    document.getElementById('status-text').innerText = "⚠️ لم يتم العثور على أرقام صالحة! تأكد أن العمود الأول A للاسماء والعمود الثاني B للأرقام.";
+                }
+                currentIndex = 0;
+                updateCounter();
+
+            } catch (error) {
+                // التقاط الخطأ وعرضه للمستخدم بدلاً من تجميد المتصفح
+                document.getElementById('status-text').style.color = '#dc3545';
+                document.getElementById('status-text').innerText = "❌ فشل تحليل الملف: " + error.message;
+                alert("حدث خطأ أثناء معالجة البيانات داخل ملف الإكسل، تأكد من صيغة الملف ونوع البيانات.");
+            }
+        };
+        
+        reader.onerror = function() {
+            document.getElementById('status-text').innerText = "❌ خطأ في قراءة الملف من الجهاز!";
+        };
+
+        reader.readAsArrayBuffer(file);
+    });
+
+    function replaceWordsIntelligently(text) {
+        let currentDict = { ...baseDictionary };
+        const userDictRaw = document.getElementById('customDict').value.split('\n');
+        
+        userDictRaw.forEach(line => {
+            if(line.includes(':')) {
+                const parts = line.split(':');
+                const key = parts[0].trim();
+                const values = parts[1].split(',').map(v => v.trim()).filter(v => v !== '');
+                if(key && values.length > 0) currentDict[key] = values;
+            }
+        });
+
+        let newText = text;
+        for (const [key, synonyms] of Object.entries(currentDict)) {
+            const options = [key, ...synonyms]; 
+            const regex = new RegExp(key, 'g');
+            newText = newText.replace(regex, () => options[Math.floor(Math.random() * options.length)]);
+        }
+        return newText;
+    }
+
+    function updateCounter() {
+        document.getElementById('sent-count').innerText = currentIndex;
+    }
+
+    function startSending() {
+        const msgElements = document.querySelectorAll('.msg-content');
+        let hasText = false;
+        msgElements.forEach(el => { if(el.value.trim() !== '') hasText = true; });
+        
+        if(!hasText) return alert("الرجاء تعبئة مربع رسالة واحد على الأقل!");
+        
+        isRunning = true;
+        isPaused = false;
+        
+        document.getElementById('btn-start').style.display = 'none';
+        document.getElementById('btn-pause').style.display = 'block';
+        document.getElementById('btn-stop').style.display = 'block';
+        document.getElementById('btn-resume').style.display = 'none';
+
+        processQueue();
+    }
+
+    function processQueue() {
+        if (!isRunning || isPaused) return;
+        
+        if (currentIndex >= contacts.length) {
+            document.getElementById('status-text').innerText = "🎉 تم الانتهاء من الإرسال!";
+            stopSending();
+            return;
+        }
+
+        const contact = contacts[currentIndex];
+        const allMessages = Array.from(document.querySelectorAll('.msg-content'))
+                                 .map(el => el.value.trim())
+                                 .filter(val => val !== '');
+        
+        const msgTemplate = allMessages[currentIndex % allMessages.length];
+        const spunMessage = replaceWordsIntelligently(msgTemplate);
+
+        const now = new Date();
+        const timeStamp = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}:${now.getMilliseconds()}`;
+        const finalMessage = `مرحباً ${contact.name}،\n\n${spunMessage}\n\n[${timeStamp}]`;
+        const waLink = `https://wa.me/${contact.phone}?text=${encodeURIComponent(finalMessage)}`;
+
+        const newWindow = window.open(waLink, '_blank');
+        
+        if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
+            document.getElementById('status-text').innerText = "❌ حظر النوافذ المنبثقة نشط!";
+            alert("يرجى تفعيل النوافذ المنبثقة للموقع لتتمكن الأداة من العمل تلقائياً.");
+            pauseSending();
+            return;
+        }
+
+        currentIndex++;
+        updateCounter();
+
+        const delaySeconds = parseInt(document.getElementById('delayInput').value) || 15;
+        document.getElementById('status-text').innerText = `جاري العمل.. تم فتح الرقم (${currentIndex}). ننتظر ${delaySeconds} ثانية...`;
+        
+        timerId = setTimeout(processQueue, delaySeconds * 1000);
+    }
+
+    function pauseSending() {
+        isPaused = true;
+        clearTimeout(timerId);
+        document.getElementById('btn-pause').style.display = 'none';
+        document.getElementById('btn-resume').style.display = 'block';
+        document.getElementById('status-text').innerText = "تم الإيقاف المؤقت.";
+    }
+
+    function resumeSending() {
+        isPaused = false;
+        document.getElementById('btn-resume').style.display = 'none';
+        document.getElementById('btn-pause').style.display = 'block';
+        processQueue();
+    }
+
+    function stopSending() {
+        isRunning = false;
+        isPaused = false;
+        clearTimeout(timerId);
+        document.getElementById('btn-start').style.display = 'block';
+        document.getElementById('btn-pause').style.display = 'none';
+        document.getElementById('btn-resume').style.display = 'none';
+        document.getElementById('btn-stop').style.display = 'none';
+    }
+</script>
+
+</body>
+</html>
